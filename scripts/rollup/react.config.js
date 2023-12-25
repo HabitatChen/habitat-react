@@ -6,7 +6,7 @@ import {
 	getPackageJSON,
 	resolvePkgPath,
 	getBaseRollupPlugins
-} from './utils.ts';
+} from './utils.js';
 import generatePackageJson from 'rollup-plugin-generate-package-json';
 
 // 获取 react/package.json 中的 name module 字段
