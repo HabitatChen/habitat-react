@@ -52,7 +52,7 @@ export const jsx = (type: Type, config: Props, ...maybeChildren: any) => {
 	return ReactElement(type, key, ref, props);
 };
 
-export const jsxDEV = (type: Type, config: Props, ...maybeChildren: any) => {
+export const jsxDEV = (type: Type, config: Props) => {
 	let key = null;
 	let ref = null;
 	const props: any = {};
@@ -76,10 +76,6 @@ export const jsxDEV = (type: Type, config: Props, ...maybeChildren: any) => {
 		if (Object.hasOwnProperty.call(config, prop)) {
 			props[prop] = val;
 		}
-
-		// 处理 children
-		const childrenLength = maybeChildren.length;
-		props.children = childrenLength === 1 ? maybeChildren[0] : maybeChildren;
 	}
 
 	return ReactElement(type, key, ref, props);
