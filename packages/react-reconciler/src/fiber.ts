@@ -1,6 +1,6 @@
 import { Key, Props, ReactElementType, Ref } from 'shared/ReactTypes';
 import { FunctionComponent, HostComponent, WorkTag } from './workTags';
-import { NoFlags } from './fiberFlags';
+import { Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { UpdateQueue } from './updateQueue';
 
@@ -31,7 +31,8 @@ export class FiberNode {
 	memoizedProps: Props; // 更新后的 props
 	memoizedState: any; // 更新后的 state
 	alternate: FiberNode | null; // 用于双缓存策略
-	flags: number; // 用于标记 fiberNode 的状态
+	flags: Flags; // 用于标记 fiberNode 的状态
+	subtreeFlags: Flags;
 	updateQueue: UpdateQueue<any> | null; // 更新队列
 
 	constructor(tag: any, pendingProps: Props, key: Key) {
@@ -54,6 +55,7 @@ export class FiberNode {
 
 		// 副作用
 		this.flags = NoFlags;
+		this.subtreeFlags = NoFlags;
 	}
 }
 
@@ -90,6 +92,7 @@ export function createWorkInProgress(
 
 		// 清除副作用
 		wip.flags = NoFlags;
+		wip.subtreeFlags = NoFlags;
 	}
 
 	wip.type = type;
