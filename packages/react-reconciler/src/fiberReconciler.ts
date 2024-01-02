@@ -25,7 +25,8 @@ export const updateContainer = (
 ) => {
 	const hostFiberNode = root.current;
 
-	// 1. 创建 update
+	// 1. 创建 update ReactDOM.createRoot(root).render(<App />)
+	// 		对于 mount 阶段来时，element 就是 App 组件；
 	const update = createUpdate(element);
 
 	// 2. 将 update 添加到 updateQueue

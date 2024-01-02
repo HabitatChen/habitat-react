@@ -12,7 +12,7 @@
  */
 
 type Action<State> = State | ((prevState: State) => State);
-interface Update<State> {
+export interface Update<State> {
 	action: Action<State>;
 }
 export interface UpdateQueue<State> {
