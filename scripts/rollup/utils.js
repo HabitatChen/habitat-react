@@ -28,7 +28,8 @@ export const getPackageJSON = (pkgName) => {
 // 输出通用的 plugins
 export function getBaseRollupPlugins(
 	alias = {
-		__DEV__: true
+		__DEV__: true,
+		preventAssignment: true
 	},
 	{ typescript = {} } = {}
 ) {

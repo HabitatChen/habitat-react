@@ -2,17 +2,12 @@ import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode, createFiberFromElement } from './fiber';
 import { HostText } from './workTags';
 import { Placement } from './fiberFlags';
+import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbol';
 
-type ReconcilerChildFibersFn = (
-	parentFiber: FiberNode,
-	childFiber: FiberNode | null,
-	childReactElement?: ReactElementType | null
-) => FiberNode | null; // 如果是 null 则说明没有子节点
-
-function ChildReconciler(shouldTrackEffects: boolean): ReconcilerChildFibersFn {
+function ChildReconciler(shouldTrackEffects: boolean) {
 	function reconcileSingElement(
 		parentFiber: FiberNode,
-		currnetFiber: FiberNode | null, // TODO: 放在这里的作用是什么?
+		currentFiber: FiberNode | null, // TODO: 放在这里的作用是什么?
 		childReactElement: ReactElementType
 	): FiberNode {
 		// 1. 创建 子节点的 fiberNode
@@ -26,8 +21,8 @@ function ChildReconciler(shouldTrackEffects: boolean): ReconcilerChildFibersFn {
 
 	function reconcileSingTextNode(
 		parentFiber: FiberNode,
-		currnetFiber: FiberNode | null, // TODO: 放在这里的作用是什么?
-		content: string | null
+		currentFiber: FiberNode | null, // TODO: 放在这里的作用是什么?
+		content: string | number
 	): FiberNode {
 		// 1. 创建 子节点的 fiberNode
 		// 2. 将子节点的return 指向父节点
@@ -41,7 +36,8 @@ function ChildReconciler(shouldTrackEffects: boolean): ReconcilerChildFibersFn {
 	function placeSingleChild(wip: FiberNode) {
 		// wip.alternate === null 表示current为null 仅在 mount 时成立
 		if (shouldTrackEffects && wip.alternate === null) {
-			wip.flags = Placement;
+			// FIXME: |= 需要理解
+			wip.flags |= Placement;
 		}
 
 		return wip;
@@ -52,30 +48,35 @@ function ChildReconciler(shouldTrackEffects: boolean): ReconcilerChildFibersFn {
 	 */
 	return function reconcilerChildFibers(
 		parentFiber: FiberNode,
-		childFiber: FiberNode | null,
-		childReactElement?: ReactElementType | null
+		childFiber: FiberNode | null, // mount => null
+		childReactElement?: ReactElementType
 	) {
 		const typeofChildReactElement = typeof childReactElement;
 		// 说明子节点是 ReactElement
-		if (typeofChildReactElement === 'object' || childReactElement !== null) {
-			// 处理 子节点是 ReactElement 的情况
-			return placeSingleChild(
-				reconcileSingElement(
-					parentFiber,
-					childFiber,
-					childReactElement as ReactElementType
-				)
-			);
+		if (typeofChildReactElement === 'object' && childReactElement !== null) {
+			switch (childReactElement?.$$typeof) {
+				case REACT_ELEMENT_TYPE:
+					return placeSingleChild(
+						reconcileSingElement(parentFiber, childFiber, childReactElement)
+					);
+				default:
+					if (__DEV__) {
+						console.warn('未实现的reconcile类型', childReactElement);
+					}
+					break;
+			}
 		}
 
-		// 说明子节点是 文本叶子节点
+		// TODO: 缺少多节点处理
+
+		// 说明子节点是 文本叶子节点 HostText
 		if (
 			typeofChildReactElement === 'string' ||
 			typeofChildReactElement === 'number'
 		) {
 			// 处理 子节点是 文本叶子节点 的情况
 			return placeSingleChild(
-				reconcileSingTextNode(parentFiber, childFiber, childReactElement)
+				reconcileSingTextNode(parentFiber, childFiber, childReactElement as any)
 			);
 		}
 

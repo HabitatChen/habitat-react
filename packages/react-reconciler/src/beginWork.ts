@@ -46,6 +46,11 @@ function updateHostRoot(wip: FiberNode): FiberNode | null {
 	const nextChildren = wip.memoizedState; // <App />
 
 	reconcilerChildren(wip, nextChildren);
+	console.log(
+		'%c [ wip ]-51',
+		'font-size:13px; background:pink; color:#bf2c9f;',
+		wip
+	);
 
 	return wip.child;
 }
@@ -61,7 +66,7 @@ function updateHostComponent(wip: FiberNode): FiberNode | null {
 	const nextChildren = nextProps.children;
 	reconcilerChildren(wip, nextChildren);
 
-	return null;
+	return wip.child;
 }
 
 /**
@@ -74,11 +79,11 @@ function reconcilerChildren(wip: FiberNode, children?: ReactElementType) {
 	const currentFiberNode = wip.alternate;
 
 	// 如果说当前的 fiberNode 是null时，说明是 mount 阶段
-	if (currentFiberNode === null) {
-		// mount 阶段
-		wip.child = mountChildFiber(wip, null, children);
-	} else {
+	if (currentFiberNode !== null) {
 		// update 阶段
 		wip.child = reconcileChildFiber(wip, currentFiberNode.child, children);
+	} else {
+		// mount 阶段
+		wip.child = mountChildFiber(wip, null, children);
 	}
 }

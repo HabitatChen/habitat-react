@@ -1,6 +1,8 @@
 import { beginWork } from './beginWork';
+import { commitMutationEffects } from './commitWork';
 import { completeWork } from './completeWork';
 import { FiberNode, FiberRootNode, createWorkInProgress } from './fiber';
+import { MutationMask, NoFlags } from './fiberFlags';
 
 // 构建一个全局指针，来记录当前正在工作的 fiberNode
 let workInProgress: FiberNode | null = null;
@@ -34,6 +36,12 @@ function renderRoot(root: FiberRootNode) {
 			workInProgress = null;
 		}
 	} while (true);
+
+	const finishedWork = root.current.alternate;
+	root.finishedWork = finishedWork;
+
+	// 开始处理 wip fiberNode tree 的 flags
+	commitRoot(root);
 }
 
 function workLoop() {
@@ -59,6 +67,10 @@ function performUnitOfWork(fiber: FiberNode) {
 	// 如果有子节点，则遍历子节点 (next 表示子节点，将workInProgress 指向 next)
 	// 如果没有子节点，则走 completeWork，遍历兄弟节点或者父节点
 	if (next === null) {
+		console.log(
+			'%c [ 当 next 为 null 时，观察一下当时的 ]-71',
+			'font-size:13px; background:pink; color:#bf2c9f;'
+		);
 		completeUnitOfWork(fiber);
 	} else {
 		workInProgress = next;
@@ -98,4 +110,41 @@ export function markUpdateFromFiberToRoot(fiberNode: FiberNode): FiberRootNode {
 
 	// 说明到了 hostFiberNode
 	return node.stateNode;
+}
+
+function commitRoot(root: FiberRootNode) {
+	// finishedWork => 当前更新完成的 fiber tree
+	const finishedWork = root.finishedWork;
+
+	// 说明没有走到 commit 阶段
+	if (finishedWork === null) {
+		return;
+	}
+
+	if (__DEV__) {
+		console.log('commitRoot: ', finishedWork);
+	}
+
+	// 进行部分重置操作
+	root.finishedWork = null;
+
+	// 需要判断是否存在 3 个子阶段需要执行的操作
+	// => 判断 root.flags & root.subtreeFlags
+
+	const subtreeHasEffect =
+		(finishedWork.subtreeFlags & MutationMask) !== NoFlags;
+	const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+
+	// mutation 操作
+	if (subtreeHasEffect || rootHasEffect) {
+		root.current = finishedWork;
+		console.log(
+			'%c [ finishedWork ]-138',
+			'font-size:13px; background:pink; color:#bf2c9f;',
+			finishedWork
+		);
+		commitMutationEffects(finishedWork);
+	} else {
+		root.current = finishedWork;
+	}
 }

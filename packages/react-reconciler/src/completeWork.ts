@@ -1,4 +1,5 @@
 import {
+	Container,
 	appendInitialChild,
 	createInstance,
 	createTextInstance
@@ -47,7 +48,7 @@ export const completeWork = (wip: FiberNode) => {
 			} else {
 				// mount
 				// 1. 创建 dom 实例
-				const instance = createTextInstance(wip.type, newProps);
+				const instance = createTextInstance(newProps.children);
 
 				// 2. 将 instance 赋值给 wip.stateNode
 				wip.stateNode = instance;
@@ -64,41 +65,30 @@ export const completeWork = (wip: FiberNode) => {
 			if (__DEV__) {
 				console.error('Invalid type of fiber.');
 			}
-			return;
+			break;
 	}
 };
 
-/**
- * 递归将所有子节点插入到 DOM tree 中
- */
-function appendAllChildren(parent: FiberNode, wip: FiberNode) {
-	let node = wip.child; // 一开始 child 肯定是个叶子节点 <div>hello</div>
+function appendAllChildren(parent: Container, wip: FiberNode) {
+	let node = wip.child;
 
-	// 向下递的过程
 	while (node !== null) {
 		if (node.tag === HostComponent || node.tag === HostText) {
-			// 将子节点插入到当前节点中 => hostConfig
-			// TODO: 这块逻辑为什么是这样
-			appendInitialChild(parent, node.stateNode);
+			appendInitialChild(parent, node?.stateNode);
 		} else if (node.child !== null) {
 			node.child.return = node;
-			// 继续向下递归
 			node = node.child;
 			continue;
 		}
-
 		if (node === wip) {
 			return;
 		}
-
-		// 如果还有 sibling 的话 则处理 sibling
 		while (node.sibling === null) {
 			if (node.return === null || node.return === wip) {
 				return;
 			}
-			node = node.return;
+			node = node?.return;
 		}
-
 		node.sibling.return = node.return;
 		node = node.sibling;
 	}
